@@ -91,7 +91,7 @@ function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, action
                         {actionLabel}
                     </Button>
                 )}
-                {/* {user?.role === 'coordinator' && (
+                {user?.role === 'coordinator' && (
                     <Button
                         variant="contained"
                         color="primary"
@@ -101,7 +101,7 @@ function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, action
                     >
                         Enroll
                     </Button>
-                )} */}
+                )}
             </CardActions>
             <EnrollModal open={enrollOpen} onClose={() => { setEnrollOpen(false); dispatch(resetEnroll()); }} students={students} onSubmit={handleEnroll} loading={isLoading || enrollLoading} />
         </Card>
