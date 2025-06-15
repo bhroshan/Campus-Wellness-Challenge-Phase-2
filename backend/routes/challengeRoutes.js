@@ -9,6 +9,8 @@ const {
   updateChallenge,
   deleteChallenge,
   getChallenge,
+  markChallengeCompleted,
+  revertChallengeCompletion
 } = require('../controllers/challengeController');
 
 const {
@@ -44,5 +46,11 @@ router.delete('/:id/join', protect, leaveChallenge);
 router.get('/:id/joined', protect, checkJoinStatus);
 router.get('/:id/not-enrolled-students', protect, listNotEnrolledStudents);
 router.post('/:id/enroll', protect, bulkEnrollStudents);
+
+router.route('/:id/complete')
+    .put(protect, markChallengeCompleted);
+
+router.route('/:id/revert')
+    .put(protect, revertChallengeCompletion);
 
 module.exports = router;

@@ -11,6 +11,10 @@ const challengeParticipationSchema = mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             required: true,
             ref: 'Challenge'
+        },
+        completed: {
+            type: Boolean,
+            default: false
         }
     },
     {

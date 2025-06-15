@@ -1,7 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getChallengeById } from '../features/challenges/challengeSlice';
+import { 
+    getChallengeById, 
+    markChallengeCompleted, 
+    revertChallengeCompletion 
+} from '../features/challenges/challengeSlice';
 import { 
     Grid, 
     Button, 
@@ -13,7 +17,11 @@ import {
     ListItem,
     ListItemText,
     ListItemIcon,
-    Paper
+    Paper,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from '@mui/material';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import Card from '@mui/material/Card';
@@ -22,15 +30,18 @@ import CardMedia from '@mui/material/CardMedia';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { API_URL } from '../configs';
+import { toast } from 'react-toastify';
 
 function ViewDetails() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { id } = useParams();
     const { user } = useSelector((state) => state.auth);
-
-    const { challenge, isLoading, isError, message } = useSelector(
+    const [confirmDialog, setConfirmDialog] = useState(false);
+    const { challenge, isLoading, isError, message, isSuccess } = useSelector(
         (state) => state.challenges
     );
 
@@ -39,6 +50,32 @@ function ViewDetails() {
             dispatch(getChallengeById(id));
         }
     }, [dispatch, id]);
+
+    useEffect(() => {
+        if (isError) {
+            toast.error(message);
+        }
+    }, [isError, message]);
+
+    const handleCompleteChallenge = async () => {
+        try {
+            await dispatch(markChallengeCompleted(id)).unwrap();
+            toast.success('Challenge marked as completed!');
+            setConfirmDialog(false);
+        } catch (error) {
+            toast.error(error || 'Failed to mark challenge as completed');
+        }
+    };
+
+    const handleRevertCompletion = async () => {
+        try {
+            await dispatch(revertChallengeCompletion(id)).unwrap();
+            toast.success('Challenge completion reverted!');
+            setConfirmDialog(false);
+        } catch (error) {
+            toast.error(error || 'Failed to revert challenge completion');
+        }
+    };
 
     if (isLoading) {
         return (
@@ -126,6 +163,33 @@ function ViewDetails() {
                             <Typography variant="body1" paragraph>
                                 {challenge.instructions}
                             </Typography>
+
+                            {/* Completion Status for Students */}
+                            {!isCoordinator && challenge.joined && (
+                                <Box sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
+                                    {challenge.completed ? (
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<CancelIcon />}
+                                            onClick={() => setConfirmDialog(true)}
+                                            disabled={isLoading}
+                                        >
+                                            Mark as Not Completed
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            variant="contained"
+                                            color="success"
+                                            startIcon={<CheckCircleIcon />}
+                                            onClick={() => setConfirmDialog(true)}
+                                            disabled={isLoading}
+                                        >
+                                            Mark as Completed
+                                        </Button>
+                                    )}
+                                </Box>
+                            )}
 
                             {/* Resources Section */}
                             {(challenge.resources?.pdfs?.length > 0 || 
@@ -296,6 +360,34 @@ function ViewDetails() {
                     </Card>
                 </Box>
             )}
+
+            {/* Confirmation Dialog */}
+            <Dialog
+                open={confirmDialog}
+                onClose={() => setConfirmDialog(false)}
+            >
+                <DialogTitle>
+                    {challenge?.completed ? 'Revert Completion' : 'Mark as Completed'}
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        {challenge?.completed 
+                            ? 'Are you sure you want to mark this challenge as not completed?'
+                            : 'Are you sure you want to mark this challenge as completed?'}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmDialog(false)}>Cancel</Button>
+                    <Button 
+                        onClick={challenge?.completed ? handleRevertCompletion : handleCompleteChallenge}
+                        color={challenge?.completed ? "error" : "success"}
+                        variant="contained"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <CircularProgress size={24} /> : 'Confirm'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }

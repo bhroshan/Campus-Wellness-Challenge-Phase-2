@@ -8,6 +8,8 @@ import Typography from '@mui/material/Typography';
 import { API_URL } from '../configs';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import Tooltip from '@mui/material/Tooltip';
 import { useNavigate } from 'react-router-dom';
 import EnrollModal from './EnrollModal';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
@@ -46,6 +48,28 @@ function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, action
                 >
                     <EditIcon fontSize="small" color="primary" />
                 </IconButton>
+            )}
+            {user?.role === 'student' && challenge.completed && (
+                <Tooltip title="Challenge Completed" placement="top">
+                    <IconButton
+                        size="small"
+                        sx={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            zIndex: 2,
+                            background: 'white',
+                            boxShadow: 1,
+                            color: 'success.main',
+                            '&:hover': {
+                                backgroundColor: 'success.light',
+                                color: 'white'
+                            }
+                        }}
+                    >
+                        <CheckCircleIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
             )}
             <CardMedia
                 sx={{ height: 200, width: '100%' }}

@@ -13,9 +13,23 @@ const getChallenges = asyncHandler(async (req, res) => {
     // Find all challenge IDs the student has joined
     const participations = await ChallengeParticipation.find({ user: req.user.id });
     const joinedIds = participations.map(p => p.challenge.toString());
-    // Exclude joined challenges
+    
+    // Get all challenges
     challenges = await Challenge.find({ _id: { $nin: joinedIds } });
-  }else{
+    
+    // Add completion status to joined challenges
+    const joinedChallenges = await Challenge.find({ _id: { $in: joinedIds } });
+    const challengesWithStatus = joinedChallenges.map(challenge => {
+      const participation = participations.find(p => p.challenge.toString() === challenge._id.toString());
+      return {
+        ...challenge.toObject(),
+        completed: participation.completed
+      };
+    });
+    
+    // Combine both arrays
+    challenges = [...challengesWithStatus, ...challenges];
+  } else {
     challenges = await Challenge.find({user: req.user.id});
   }
   res.status(200).json(challenges);
@@ -183,12 +197,14 @@ const getChallenge = asyncHandler(async (req, res) => {
 
     // If user is not a coordinator, check if they have joined the challenge
     let joined = false;
+    let completed = false;
     if (!isCoordinator) {
         const challengeParticipation = await ChallengeParticipation.findOne({
             user: req.user.id,
             challenge: req.params.id
         });
         joined = !!challengeParticipation;
+        completed = challengeParticipation?.completed;
     }
 
     // If user is not a coordinator and hasn't joined, remove resources
@@ -202,7 +218,54 @@ const getChallenge = asyncHandler(async (req, res) => {
 
     res.json({
         ...challenge.toObject(),
-        joined
+        joined,
+        completed
+    });
+});
+
+// @desc    Mark challenge as completed
+// @route   PUT /api/challenges/:id/complete
+// @access  Private
+const markChallengeCompleted = asyncHandler(async (req, res) => {
+    const challengeParticipation = await ChallengeParticipation.findOne({
+        user: req.user.id,
+        challenge: req.params.id
+    });
+
+    if (!challengeParticipation) {
+        res.status(404);
+        throw new Error('Challenge participation not found');
+    }
+
+    challengeParticipation.completed = true;
+    await challengeParticipation.save();
+
+    res.status(200).json({
+        message: 'Challenge marked as completed',
+        completed: true
+    });
+});
+
+// @desc    Revert challenge completion
+// @route   PUT /api/challenges/:id/revert
+// @access  Private
+const revertChallengeCompletion = asyncHandler(async (req, res) => {
+    const challengeParticipation = await ChallengeParticipation.findOne({
+        user: req.user.id,
+        challenge: req.params.id
+    });
+
+    if (!challengeParticipation) {
+        res.status(404);
+        throw new Error('Challenge participation not found');
+    }
+
+    challengeParticipation.completed = false;
+    await challengeParticipation.save();
+
+    res.status(200).json({
+        message: 'Challenge completion reverted',
+        completed: false
     });
 });
 
@@ -212,4 +275,6 @@ module.exports = {
   updateChallenge,
   deleteChallenge,
   getChallenge,
+  markChallengeCompleted,
+  revertChallengeCompletion
 };

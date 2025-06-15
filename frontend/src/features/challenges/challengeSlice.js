@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import challengeService from './challengeService';
+import axios from 'axios';
 
 const initialState = {
     challenges: [],
@@ -151,6 +152,46 @@ export const getJoinedChallenges = createAsyncThunk(
     }
 );
 
+export const markChallengeCompleted = createAsyncThunk(
+    'challenges/markCompleted',
+    async (id, thunkAPI) => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const token = user?.token;
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            };
+            const response = await axios.put(`/api/challenges/${id}/complete`, {}, config);
+            return response.data;
+        } catch (error) {
+            const message = error.response?.data?.message || error.message || error.toString();
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
+export const revertChallengeCompletion = createAsyncThunk(
+    'challenges/revertCompletion',
+    async (id, thunkAPI) => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const token = user?.token;
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            };
+            const response = await axios.put(`/api/challenges/${id}/revert`, {}, config);
+            return response.data;
+        } catch (error) {
+            const message = error.response?.data?.message || error.message || error.toString();
+            return thunkAPI.rejectWithValue(message);
+        }
+    }
+);
+
 export const challengeSlice = createSlice({
     name: 'challenge',
     initialState,
@@ -267,6 +308,36 @@ export const challengeSlice = createSlice({
                 state.joinedChallenges = action.payload.map(challenge => challenge._id);
             })
             .addCase(getJoinedChallenges.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = action.payload;
+            })
+            .addCase(markChallengeCompleted.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(markChallengeCompleted.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                if (state.challenge) {
+                    state.challenge.completed = true;
+                }
+            })
+            .addCase(markChallengeCompleted.rejected, (state, action) => {
+                state.isLoading = false;
+                state.isError = true;
+                state.message = action.payload;
+            })
+            .addCase(revertChallengeCompletion.pending, (state) => {
+                state.isLoading = true;
+            })
+            .addCase(revertChallengeCompletion.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.isSuccess = true;
+                if (state.challenge) {
+                    state.challenge.completed = false;
+                }
+            })
+            .addCase(revertChallengeCompletion.rejected, (state, action) => {
                 state.isLoading = false;
                 state.isError = true;
                 state.message = action.payload;

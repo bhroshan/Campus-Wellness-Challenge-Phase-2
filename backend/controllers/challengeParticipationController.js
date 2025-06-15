@@ -17,8 +17,11 @@ const getJoinedChallenges = asyncHandler(async (req, res) => {
             select: 'title description instructions image user'
         });
 
-    // Extract challenges from participations
-    const challenges = participations.map(p => p.challenge).filter(Boolean);
+    // Extract challenges from participations and include completion status
+    const challenges = participations.map(p => ({
+        ...p.challenge.toObject(),
+        completed: p.completed
+    })).filter(challenge => challenge._id); // Filter out any null challenges
 
     res.status(200).json(challenges);
 });

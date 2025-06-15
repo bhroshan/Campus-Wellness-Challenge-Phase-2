@@ -7,6 +7,8 @@ import { fetchDashboardStats, resetDashboard } from '../features/challenges/dash
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import GroupIcon from '@mui/icons-material/Group';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
 
 const Dashboard = () => {
     const dispatch = useDispatch();
@@ -80,11 +82,19 @@ const Dashboard = () => {
             </Box>
 
             {/* Card Box */}
-            <Grid container spacing={6}>
+            <Grid container spacing={3}>
                 {user?.role === 'student' && stats && (
                     <>
-                        <Grid item xs={12} md={6}>
-                            <Card sx={{ backgroundColor: '#BDBDBD', borderRadius: 2, height: '100%' }}>
+                        <Grid item xs={12} md={6} lg={3}>
+                            <Card sx={{ 
+                                backgroundColor: '#BDBDBD', 
+                                borderRadius: 2, 
+                                height: '100%',
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)'
+                                }
+                            }}>
                                 <CardContent>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <EmojiEventsIcon fontSize="large" color="primary" />
@@ -98,8 +108,16 @@ const Dashboard = () => {
                                 </CardContent>
                             </Card>
                         </Grid>
-                        <Grid item xs={12} md={6}>
-                            <Card sx={{ backgroundColor: '#BDBDBD', borderRadius: 2, height: '100%' }}>
+                        <Grid item xs={12} md={6} lg={3}>
+                            <Card sx={{ 
+                                backgroundColor: '#BDBDBD', 
+                                borderRadius: 2, 
+                                height: '100%',
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)'
+                                }
+                            }}>
                                 <CardContent>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <AssignmentTurnedInIcon fontSize="large" color="success" />
@@ -113,12 +131,66 @@ const Dashboard = () => {
                                 </CardContent>
                             </Card>
                         </Grid>
+                        <Grid item xs={12} md={6} lg={3}>
+                            <Card sx={{ 
+                                backgroundColor: '#BDBDBD', 
+                                borderRadius: 2, 
+                                height: '100%',
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)'
+                                }
+                            }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <CheckCircleIcon fontSize="large" color="success" />
+                                        <Typography variant="h4" sx={{ color: 'black', mb: 1 }}>
+                                            {stats.completedCount}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="h6" sx={{ color: 'black' }}>
+                                        Completed Challenges
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={3}>
+                            <Card sx={{ 
+                                backgroundColor: '#BDBDBD', 
+                                borderRadius: 2, 
+                                height: '100%',
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)'
+                                }
+                            }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <PendingActionsIcon fontSize="large" color="warning" />
+                                        <Typography variant="h4" sx={{ color: 'black', mb: 1 }}>
+                                            {stats.pendingCount}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="h6" sx={{ color: 'black' }}>
+                                        Pending Challenges
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
                     </>
                 )}
                 {user?.role === 'coordinator' && stats && (
                     <>
-                        <Grid item xs={12} md={4}>
-                            <Card sx={{ backgroundColor: '#BDBDBD', borderRadius: 2, height: '100%' }}>
+                        <Grid item xs={12} md={6} lg={3}>
+                            <Card sx={{ 
+                                backgroundColor: '#BDBDBD', 
+                                borderRadius: 2, 
+                                height: '100%',
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)'
+                                }
+                            }}>
                                 <CardContent>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <EmojiEventsIcon fontSize="large" color="primary" />
@@ -132,8 +204,16 @@ const Dashboard = () => {
                                 </CardContent>
                             </Card>
                         </Grid>
-                        <Grid item xs={12} md={4}>
-                            <Card sx={{ backgroundColor: '#BDBDBD', borderRadius: 2, height: '100%' }}>
+                        <Grid item xs={12} md={6} lg={3}>
+                            <Card sx={{ 
+                                backgroundColor: '#BDBDBD', 
+                                borderRadius: 2, 
+                                height: '100%',
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)'
+                                }
+                            }}>
                                 <CardContent>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <GroupIcon fontSize="large" color="secondary" />
@@ -143,6 +223,52 @@ const Dashboard = () => {
                                     </Box>
                                     <Typography variant="h6" sx={{ color: 'black' }}>
                                         Active Participants
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={3}>
+                            <Card sx={{ 
+                                backgroundColor: '#BDBDBD', 
+                                borderRadius: 2, 
+                                height: '100%',
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)'
+                                }
+                            }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <CheckCircleIcon fontSize="large" color="success" />
+                                        <Typography variant="h4" sx={{ color: 'black', mb: 1 }}>
+                                            {stats.completedChallenges}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="h6" sx={{ color: 'black' }}>
+                                        Completed by Participants
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={6} lg={3}>
+                            <Card sx={{ 
+                                backgroundColor: '#BDBDBD', 
+                                borderRadius: 2, 
+                                height: '100%',
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-5px)'
+                                }
+                            }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <PendingActionsIcon fontSize="large" color="warning" />
+                                        <Typography variant="h4" sx={{ color: 'black', mb: 1 }}>
+                                            {stats.pendingChallenges}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="h6" sx={{ color: 'black' }}>
+                                        Pending by Participants
                                     </Typography>
                                 </CardContent>
                             </Card>
