@@ -13,22 +13,9 @@ const getChallenges = asyncHandler(async (req, res) => {
     // Find all challenge IDs the student has joined
     const participations = await ChallengeParticipation.find({ user: req.user.id });
     const joinedIds = participations.map(p => p.challenge.toString());
-    
+    console.log(joinedIds);
     // Get all challenges
     challenges = await Challenge.find({ _id: { $nin: joinedIds } });
-    
-    // Add completion status to joined challenges
-    const joinedChallenges = await Challenge.find({ _id: { $in: joinedIds } });
-    const challengesWithStatus = joinedChallenges.map(challenge => {
-      const participation = participations.find(p => p.challenge.toString() === challenge._id.toString());
-      return {
-        ...challenge.toObject(),
-        completed: participation.completed
-      };
-    });
-    
-    // Combine both arrays
-    challenges = [...challengesWithStatus, ...challenges];
   } else {
     challenges = await Challenge.find({user: req.user.id});
   }
