@@ -23,6 +23,20 @@ const challengesSchema = mongoose.Schema(
       type: String,
       default: null
     },
+    resources: {
+      pdfs: [{
+        name: String,
+        path: String
+      }],
+      images: [{
+        name: String,
+        path: String
+      }],
+      links: [{
+        title: String,
+        url: String
+      }]
+    }
   },
   {
     timestamps: true,

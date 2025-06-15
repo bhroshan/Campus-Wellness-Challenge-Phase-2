@@ -10,10 +10,20 @@ import {
     Paper,
     TextField,
     Typography,
-    CircularProgress
+    CircularProgress,
+    IconButton,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemSecondaryAction,
+    Divider
 } from "@mui/material";
 import AssignmentReturnIcon from "@mui/icons-material/AssignmentReturn";
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import DeleteIcon from '@mui/icons-material/Delete';
+import LinkIcon from '@mui/icons-material/Link';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
 import { API_URL } from '../configs';
 
 const EditChallenge = () => {
@@ -27,8 +37,15 @@ const EditChallenge = () => {
         description: "",
         instructions: "",
         challenge_image: null,
-        existing_image: null
+        existing_image: null,
+        resources: {
+            pdfs: [],
+            images: [],
+            links: []
+        }
     });
+
+    const [linkInput, setLinkInput] = useState({ title: '', url: '' });
 
     useEffect(() => {
         dispatch(getChallengeById(id));
@@ -41,12 +58,17 @@ const EditChallenge = () => {
                 description: challenge.description || "",
                 instructions: challenge.instructions || "",
                 challenge_image: null,
-                existing_image: challenge.image || null
+                existing_image: challenge.image || null,
+                resources: challenge.resources || {
+                    pdfs: [],
+                    images: [],
+                    links: []
+                }
             });
         }
     }, [challenge, id]);
 
-    const { title, description, instructions, challenge_image, existing_image } = formData;
+    const { title, description, instructions, challenge_image, existing_image, resources } = formData;
 
     const onChange = (e) => {
         if (e.target.name === 'challenge_image') {
@@ -55,12 +77,50 @@ const EditChallenge = () => {
                 [e.target.name]: e.target.files[0],
                 existing_image: null
             }))
+        } else if (e.target.name === 'pdfs' || e.target.name === 'images') {
+            setFormData((prevState) => ({
+                ...prevState,
+                resources: {
+                    ...prevState.resources,
+                    [e.target.name]: [...prevState.resources[e.target.name], ...Array.from(e.target.files)]
+                }
+            }))
         } else {
             setFormData((prevState) => ({
                 ...prevState,
                 [e.target.name]: e.target.value
             }))
         }
+    };
+
+    const handleLinkInputChange = (e) => {
+        setLinkInput({
+            ...linkInput,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    const addLink = () => {
+        if (linkInput.title && linkInput.url) {
+            setFormData((prevState) => ({
+                ...prevState,
+                resources: {
+                    ...prevState.resources,
+                    links: [...prevState.resources.links, { ...linkInput }]
+                }
+            }));
+            setLinkInput({ title: '', url: '' });
+        }
+    };
+
+    const removeResource = (type, index) => {
+        setFormData((prevState) => ({
+            ...prevState,
+            resources: {
+                ...prevState.resources,
+                [type]: prevState.resources[type].filter((_, i) => i !== index)
+            }
+        }));
     };
 
     const handleSubmit = (e) => {
@@ -72,6 +132,16 @@ const EditChallenge = () => {
         if (challenge_image) {
             formDataToSend.append('challenge_image', challenge_image);
         }
+
+        // Append resources
+        resources.pdfs.forEach((file, index) => {
+            formDataToSend.append(`pdfs`, file);
+        });
+        resources.images.forEach((file, index) => {
+            formDataToSend.append(`images`, file);
+        });
+        formDataToSend.append('links', JSON.stringify(resources.links));
+
         dispatch(updateChallenge({ id, challengeData: formDataToSend }))
             .unwrap()
             .then(() => {
@@ -250,6 +320,200 @@ const EditChallenge = () => {
                                 value={instructions}
                                 onChange={onChange}
                             />
+                        </Grid>
+
+                        {/* Resources Section */}
+                        <Grid item xs={12}>
+                            <Typography variant="h6" sx={{ mb: 2 }}>Resources</Typography>
+                            
+                            {/* PDF Upload */}
+                            <Box sx={{ mb: 3 }}>
+                                <input
+                                    accept="application/pdf"
+                                    style={{ display: 'none' }}
+                                    id="pdf-upload"
+                                    type="file"
+                                    name="pdfs"
+                                    multiple
+                                    onChange={onChange}
+                                />
+                                <Button
+                                    variant="outlined"
+                                    component="label"
+                                    htmlFor="pdf-upload"
+                                    startIcon={<PictureAsPdfIcon />}
+                                    sx={{ mb: 2 }}
+                                >
+                                    Upload PDFs
+                                </Button>
+                                <List>
+                                    {resources.pdfs.map((file, index) => (
+                                        <ListItem 
+                                            key={index}
+                                            sx={{ 
+                                                '&:hover': { 
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                    cursor: 'pointer'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemText 
+                                                primary={
+                                                    <a 
+                                                        href={file.path ? `${API_URL}${file.path}` : URL.createObjectURL(file)} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        style={{ 
+                                                            color: 'inherit', 
+                                                            textDecoration: 'none',
+                                                            display: 'block',
+                                                            width: '100%'
+                                                        }}
+                                                    >
+                                                        {file.name || file.path.split('/').pop()}
+                                                    </a>
+                                                }
+                                            />
+                                            <ListItemSecondaryAction>
+                                                <IconButton edge="end" onClick={() => removeResource('pdfs', index)}>
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </ListItemSecondaryAction>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Box>
+
+                            {/* Image Upload */}
+                            <Box sx={{ mb: 3 }}>
+                                <input
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    id="image-upload"
+                                    type="file"
+                                    name="images"
+                                    multiple
+                                    onChange={onChange}
+                                />
+                                <Button
+                                    variant="outlined"
+                                    component="label"
+                                    htmlFor="image-upload"
+                                    startIcon={<ImageIcon />}
+                                    sx={{ mb: 2 }}
+                                >
+                                    Upload Images
+                                </Button>
+                                <List>
+                                    {resources.images.map((file, index) => (
+                                        <ListItem 
+                                            key={index}
+                                            sx={{ 
+                                                '&:hover': { 
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                    cursor: 'pointer'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemText 
+                                                primary={
+                                                    <a 
+                                                        href={file.path ? `${API_URL}${file.path}` : URL.createObjectURL(file)} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        style={{ 
+                                                            color: 'inherit', 
+                                                            textDecoration: 'none',
+                                                            display: 'block',
+                                                            width: '100%'
+                                                        }}
+                                                    >
+                                                        {file.name || file.path.split('/').pop()}
+                                                    </a>
+                                                }
+                                            />
+                                            <ListItemSecondaryAction>
+                                                <IconButton edge="end" onClick={() => removeResource('images', index)}>
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </ListItemSecondaryAction>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Box>
+
+                            {/* Links */}
+                            <Box sx={{ mb: 3 }}>
+                                <Typography variant="subtitle1" sx={{ mb: 2 }}>Add Links</Typography>
+                                <Grid container spacing={2} sx={{ mb: 2 }}>
+                                    <Grid item xs={12} sm={5}>
+                                        <TextField
+                                            label="Link Title"
+                                            name="title"
+                                            value={linkInput.title}
+                                            onChange={handleLinkInputChange}
+                                            fullWidth
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={5}>
+                                        <TextField
+                                            label="URL"
+                                            name="url"
+                                            value={linkInput.url}
+                                            onChange={handleLinkInputChange}
+                                            fullWidth
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={2}>
+                                        <Button
+                                            variant="contained"
+                                            onClick={addLink}
+                                            startIcon={<LinkIcon />}
+                                            fullWidth
+                                            sx={{ height: '100%' }}
+                                        >
+                                            Add
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                                <List>
+                                    {resources.links.map((link, index) => (
+                                        <ListItem 
+                                            key={index}
+                                            sx={{ 
+                                                '&:hover': { 
+                                                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                                                    cursor: 'pointer'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemText 
+                                                primary={
+                                                    <a 
+                                                        href={link.url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        style={{ 
+                                                            color: 'inherit', 
+                                                            textDecoration: 'none',
+                                                            display: 'block',
+                                                            width: '100%'
+                                                        }}
+                                                    >
+                                                        {link.title}
+                                                    </a>
+                                                }
+                                                secondary={link.url}
+                                            />
+                                            <ListItemSecondaryAction>
+                                                <IconButton edge="end" onClick={() => removeResource('links', index)}>
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </ListItemSecondaryAction>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Box>
                         </Grid>
 
                         <Grid item xs={12}>

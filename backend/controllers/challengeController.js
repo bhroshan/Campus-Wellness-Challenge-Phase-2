@@ -30,19 +30,38 @@ const setChallenge = asyncHandler(async (req, res) => {
     throw new Error('Request body is missing');
   }
 
-  const { title, description, instructions } = req.body;
+  const { title, description, instructions, links } = req.body;
 
   if (!title || !description || !instructions) {
     res.status(400);
     throw new Error('Please fill out all required fields (title, description, and instructions)');
   }
 
+  // Process uploaded files
+  const pdfs = req.files?.pdfs ? req.files.pdfs.map(file => ({
+    name: file.originalname,
+    path: `/uploads/challenges/pdfs/${file.filename}`
+  })) : [];
+
+  const images = req.files?.images ? req.files.images.map(file => ({
+    name: file.originalname,
+    path: `/uploads/challenges/images/${file.filename}`
+  })) : [];
+
+  // Process links
+  const parsedLinks = links ? JSON.parse(links) : [];
+
   const challenge = await Challenge.create({
     title,
     description,
     instructions,
-    image: req.file ? `/uploads/challenges/${req.file.filename}` : null,
+    image: req.files?.challenge_image ? `/uploads/challenges/main/${req.files.challenge_image[0].filename}` : null,
     user: req.user.id,
+    resources: {
+      pdfs,
+      images,
+      links: parsedLinks
+    }
   });
 
   res.status(200).json(challenge);
@@ -73,12 +92,35 @@ const updateChallenge = asyncHandler(async (req, res) => {
     throw new Error('User not authorized');
   }
 
+  const { title, description, instructions, links } = req.body;
+
+  // Process uploaded files
+  const pdfs = req.files?.pdfs ? req.files.pdfs.map(file => ({
+    name: file.originalname,
+    path: `/uploads/challenges/pdfs/${file.filename}`
+  })) : [];
+
+  const images = req.files?.images ? req.files.images.map(file => ({
+    name: file.originalname,
+    path: `/uploads/challenges/images/${file.filename}`
+  })) : [];
+
+  // Process links
+  const parsedLinks = links ? JSON.parse(links) : [];
+
   const updateData = {
-    ...req.body
+    title,
+    description,
+    instructions,
+    resources: {
+      pdfs: [...(challenge.resources?.pdfs || []), ...pdfs],
+      images: [...(challenge.resources?.images || []), ...images],
+      links: parsedLinks
+    }
   };
 
-  if (req.file) {
-    updateData.image = `/uploads/challenges/${req.file.filename}`;
+  if (req.files?.challenge_image) {
+    updateData.image = `/uploads/challenges/main/${req.files.challenge_image[0].filename}`;
   }
 
   const updatedChallenge = await Challenge.findByIdAndUpdate(
@@ -124,18 +166,44 @@ const deleteChallenge = asyncHandler(async (req, res) => {
   });
 });
 
-//@desc     Get single challenge
-//@route    GET /api/challenges/:id
-//@access   Private
+// @desc    Get challenge by ID
+// @route   GET /api/challenges/:id
+// @access  Private
 const getChallenge = asyncHandler(async (req, res) => {
-  const challenge = await Challenge.findById(req.params.id);
+    const challenge = await Challenge.findById(req.params.id);
 
-  if (!challenge) {
-    res.status(404);
-    throw new Error('Challenge not found');
-  }
+    if (!challenge) {
+        res.status(404);
+        throw new Error('Challenge not found');
+    }
 
-  res.status(200).json(challenge);
+    // Check if user is a coordinator
+    const user = await User.findById(req.user.id);
+    const isCoordinator = user.role === 'coordinator';
+
+    // If user is not a coordinator, check if they have joined the challenge
+    let joined = false;
+    if (!isCoordinator) {
+        const challengeParticipation = await ChallengeParticipation.findOne({
+            user: req.user.id,
+            challenge: req.params.id
+        });
+        joined = !!challengeParticipation;
+    }
+
+    // If user is not a coordinator and hasn't joined, remove resources
+    if (!isCoordinator && !joined) {
+        challenge.resources = {
+            pdfs: [],
+            images: [],
+            links: []
+        };
+    }
+
+    res.json({
+        ...challenge.toObject(),
+        joined
+    });
 });
 
 module.exports = {

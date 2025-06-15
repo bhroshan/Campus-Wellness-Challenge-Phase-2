@@ -20,16 +20,24 @@ const {
   bulkEnrollStudents,
 } = require('../controllers/challengeParticipationController');
 
-// Challenge participation routes - specific routes first
+// Challenge participation routes - specific routes first 
 router.get('/joined', protect, getJoinedChallenges);
 
 // Challenge CRUD routes
-router.post('/', protect, challengeUpload.single('challenge_image'), setChallenge);
+router.post('/', protect, challengeUpload.fields([
+  { name: 'challenge_image', maxCount: 1 },
+  { name: 'pdfs', maxCount: 10 },
+  { name: 'images', maxCount: 10 }
+]), setChallenge);
 router.get('/', protect, getChallenges);
 
 // Routes with parameters should come last
 router.delete('/:id', protect, deleteChallenge);
-router.put('/:id', protect, challengeUpload.single('challenge_image'), updateChallenge);
+router.put('/:id', protect, challengeUpload.fields([
+  { name: 'challenge_image', maxCount: 1 },
+  { name: 'pdfs', maxCount: 10 },
+  { name: 'images', maxCount: 10 }
+]), updateChallenge);
 router.get('/:id', protect, getChallenge);
 router.post('/:id/join', protect, joinChallenge);
 router.delete('/:id/join', protect, leaveChallenge);
