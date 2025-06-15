@@ -17,7 +17,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchNotEnrolledStudents, enrollStudentsThunk, resetEnroll } from '../features/challenges/enrollSlice';
 import { toast } from 'react-toastify';
 
-function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, actionColor = "primary", showEdit }) {
+function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, actionColor = "primary", showEdit, icon }) {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const { students, isLoading, enrollLoading } = useSelector(state => state.enroll);
@@ -124,18 +124,19 @@ function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, action
                 </Typography>
             </CardContent>
             <CardActions>
-                <Button 
+                {/* <Button 
                     variant='outlined' 
                     size="small" 
                     onClick={(e) => handleButtonClick(e, () => onViewDetails(challenge._id))}
                 >
                     View Details
-                </Button>
+                </Button> */}
                 {onAction && (
                     <Button 
                         variant='outlined' 
                         color={actionColor}
                         size="small"
+                        startIcon={icon ? icon : null}
                         onClick={(e) => handleButtonClick(e, () => onAction(challenge._id))}
                     >
                         {actionLabel}

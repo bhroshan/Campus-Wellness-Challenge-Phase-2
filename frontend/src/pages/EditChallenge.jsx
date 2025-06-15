@@ -170,7 +170,7 @@ const EditChallenge = () => {
     }
 
     return (
-        <Box sx={{ width: "100%" }}>
+        <Box sx={{ width: "100%", py: 2 }}>
             <Button
                 variant="contained"
                 startIcon={<AssignmentReturnIcon />}

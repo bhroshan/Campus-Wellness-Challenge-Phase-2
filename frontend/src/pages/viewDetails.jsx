@@ -4,8 +4,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { 
     getChallengeById, 
     markChallengeCompleted, 
-    revertChallengeCompletion 
+    revertChallengeCompletion,
+    joinChallenge,
+    leaveChallenge,
+    deleteChallenge
 } from '../features/challenges/challengeSlice';
+import { fetchNotEnrolledStudents, enrollStudentsThunk, resetEnroll } from '../features/challenges/enrollSlice';
 import { 
     Grid, 
     Button, 
@@ -32,8 +36,13 @@ import ImageIcon from '@mui/icons-material/Image';
 import LinkIcon from '@mui/icons-material/Link';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import LoginIcon from '@mui/icons-material/Login';
 import { API_URL } from '../configs';
 import { toast } from 'react-toastify';
+import EnrollModal from '../components/EnrollModal';
 
 function ViewDetails() {
     const navigate = useNavigate();
@@ -41,9 +50,15 @@ function ViewDetails() {
     const { id } = useParams();
     const { user } = useSelector((state) => state.auth);
     const [confirmDialog, setConfirmDialog] = useState(false);
+    const [deleteDialog, setDeleteDialog] = useState(false);
+    const [joinDialog, setJoinDialog] = useState(false);
+    const [leaveDialog, setLeaveDialog] = useState(false);
+    const [enrollDialog, setEnrollDialog] = useState(false);
+    const [enrollOpen, setEnrollOpen] = useState(false);
     const { challenge, isLoading, isError, message, isSuccess } = useSelector(
         (state) => state.challenges
     );
+    const { students, isLoading: enrollLoading, enrollLoading: enrollSubmitLoading } = useSelector(state => state.enroll);
 
     useEffect(() => {
         if (id) {
@@ -75,6 +90,61 @@ function ViewDetails() {
         } catch (error) {
             toast.error(error || 'Failed to revert challenge completion');
         }
+    };
+
+    const handleJoinChallenge = async () => {
+        try {
+            await dispatch(joinChallenge(id)).unwrap();
+            toast.success('Successfully joined the challenge!');
+            setJoinDialog(false);
+            // Refresh challenge data
+            dispatch(getChallengeById(id));
+        } catch (error) {
+            toast.error(error || 'Failed to join challenge');
+        }
+    };
+
+    const handleLeaveChallenge = async () => {
+        try {
+            await dispatch(leaveChallenge(id)).unwrap();
+            toast.success('Successfully left the challenge!');
+            setLeaveDialog(false);
+            // Refresh challenge data
+            dispatch(getChallengeById(id));
+        } catch (error) {
+            toast.error(error || 'Failed to leave challenge');
+        }
+    };
+
+    const handleDeleteChallenge = async () => {
+        try {
+            await dispatch(deleteChallenge(id)).unwrap();
+            toast.success('Challenge deleted successfully!');
+            setDeleteDialog(false);
+            navigate('/view-challenge-list');
+        } catch (error) {
+            toast.error(error || 'Failed to delete challenge');
+        }
+    };
+
+    const handleOpenEnroll = () => {
+        setEnrollDialog(true);
+    };
+
+    const handleConfirmEnroll = () => {
+        setEnrollDialog(false);
+        setEnrollOpen(true);
+        dispatch(fetchNotEnrolledStudents(id));
+    };
+
+    const handleEnroll = (studentIds) => {
+        dispatch(enrollStudentsThunk({ challengeId: id, studentIds }))
+            .unwrap()
+            .then(() => {
+                toast.success('Students enrolled successfully');
+                setEnrollOpen(false);
+                dispatch(resetEnroll());
+            });
     };
 
     // Helper function to check if URL is YouTube
@@ -110,7 +180,7 @@ function ViewDetails() {
 
     return (
         <>
-            {/* Header with Go Back and Completion Buttons */}
+            {/* Header with Go Back and Action Buttons */}
             <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'space-between', 
@@ -133,32 +203,82 @@ function ViewDetails() {
                     Go Back
                 </Button>
 
-                {/* Completion Button for Students */}
-                {!isCoordinator && challenge?.joined && (
-                    <Box>
-                        {challenge.completed ? (
+                {/* Action Buttons */}
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    {/* Student Actions */}
+                    {!isCoordinator && (
+                        <>
+                            {!challenge?.joined ? (
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    startIcon={<LoginIcon />}
+                                    onClick={() => setJoinDialog(true)}
+                                    disabled={isLoading}
+                                >
+                                    Join Challenge
+                                </Button>
+                            ) : (
+                                <>
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<ExitToAppIcon />}
+                                        onClick={() => setLeaveDialog(true)}
+                                        disabled={isLoading}
+                                    >
+                                        Leave Challenge
+                                    </Button>
+                                    {challenge.completed ? (
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<CancelIcon />}
+                                            onClick={() => setConfirmDialog(true)}
+                                            disabled={isLoading}
+                                        >
+                                            Mark as Not Completed
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            variant="contained"
+                                            color="success"
+                                            startIcon={<CheckCircleIcon />}
+                                            onClick={() => setConfirmDialog(true)}
+                                            disabled={isLoading}
+                                        >
+                                            Mark as Completed
+                                        </Button>
+                                    )}
+                                </>
+                            )}
+                        </>
+                    )}
+
+                    {/* Coordinator Actions */}
+                    {isCoordinator && (
+                        <>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                startIcon={<GroupAddIcon />}
+                                onClick={handleOpenEnroll}
+                                disabled={isLoading}
+                            >
+                                Enroll Students
+                            </Button>
                             <Button
                                 variant="outlined"
                                 color="error"
-                                startIcon={<CancelIcon />}
-                                onClick={() => setConfirmDialog(true)}
+                                startIcon={<DeleteIcon />}
+                                onClick={() => setDeleteDialog(true)}
                                 disabled={isLoading}
                             >
-                                Mark as Not Completed
+                                Delete Challenge
                             </Button>
-                        ) : (
-                            <Button
-                                variant="contained"
-                                color="success"
-                                startIcon={<CheckCircleIcon />}
-                                onClick={() => setConfirmDialog(true)}
-                                disabled={isLoading}
-                            >
-                                Mark as Completed
-                            </Button>
-                        )}
-                    </Box>
-                )}
+                        </>
+                    )}
+                </Box>
             </Box>
 
             {/* Challenge Details */}
@@ -397,7 +517,7 @@ function ViewDetails() {
                                             <Button
                                                 variant="contained"
                                                 color="primary"
-                                                onClick={() => navigate(`/join-challenge/${challenge._id}`)}
+                                                onClick={() => setJoinDialog(true)}
                                                 sx={{ mt: 2 }}
                                             >
                                                 Join Challenge
@@ -411,7 +531,78 @@ function ViewDetails() {
                 </Box>
             )}
 
-            {/* Confirmation Dialog */}
+            {/* Join Challenge Confirmation Dialog */}
+            <Dialog
+                open={joinDialog}
+                onClose={() => setJoinDialog(false)}
+            >
+                <DialogTitle>Join Challenge</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to join "{challenge?.title}"? You will be able to access all resources and track your progress.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setJoinDialog(false)}>Cancel</Button>
+                    <Button 
+                        onClick={handleJoinChallenge}
+                        color="primary"
+                        variant="contained"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <CircularProgress size={24} /> : 'Join Challenge'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Leave Challenge Confirmation Dialog */}
+            <Dialog
+                open={leaveDialog}
+                onClose={() => setLeaveDialog(false)}
+            >
+                <DialogTitle>Leave Challenge</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to leave "{challenge?.title}"? Your progress will be lost and you won't have access to the resources anymore.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setLeaveDialog(false)}>Cancel</Button>
+                    <Button 
+                        onClick={handleLeaveChallenge}
+                        color="error"
+                        variant="contained"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <CircularProgress size={24} /> : 'Leave Challenge'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Enroll Students Confirmation Dialog */}
+            <Dialog
+                open={enrollDialog}
+                onClose={() => setEnrollDialog(false)}
+            >
+                <DialogTitle>Enroll Students</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Do you want to enroll students in "{challenge?.title}"? You will be able to select which students to enroll in the next step.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEnrollDialog(false)}>Cancel</Button>
+                    <Button 
+                        onClick={handleConfirmEnroll}
+                        color="primary"
+                        variant="contained"
+                    >
+                        Continue to Enrollment
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Completion Confirmation Dialog */}
             <Dialog
                 open={confirmDialog}
                 onClose={() => setConfirmDialog(false)}
@@ -438,6 +629,42 @@ function ViewDetails() {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialog}
+                onClose={() => setDeleteDialog(false)}
+            >
+                <DialogTitle>Delete Challenge</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete "{challenge?.title}"? This action cannot be undone and all participant data will be lost.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialog(false)}>Cancel</Button>
+                    <Button 
+                        onClick={handleDeleteChallenge}
+                        color="error"
+                        variant="contained"
+                        disabled={isLoading}
+                    >
+                        {isLoading ? <CircularProgress size={24} /> : 'Delete Challenge'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Enroll Modal */}
+            <EnrollModal 
+                open={enrollOpen} 
+                onClose={() => { 
+                    setEnrollOpen(false); 
+                    dispatch(resetEnroll()); 
+                }} 
+                students={students} 
+                onSubmit={handleEnroll} 
+                loading={enrollLoading || enrollSubmitLoading} 
+            />
         </>
     );
 }

@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import { toast } from 'react-toastify';
 import ChallengeCard from '../components/ChallengeCard';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 
 function ViewChallengeList() {
     const navigate = useNavigate();
@@ -127,6 +130,8 @@ function ViewChallengeList() {
                                 actionColor={user?.role === 'coordinator' ? 'error' : 
                                     joinedChallenges.includes(challenge._id) ? 'error' : 'primary'}
                                 showEdit={user?.role === 'coordinator'}
+                                icon={user?.role === 'coordinator' ? <DeleteIcon /> : 
+                                    joinedChallenges.includes(challenge._id) ? <ExitToAppIcon /> : <GroupAddIcon />}
                             />
                         </Grid>
                     ))}

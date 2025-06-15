@@ -6,6 +6,7 @@ import AssignmentReturnIcon from '@mui/icons-material/AssignmentReturn';
 import { getJoinedChallenges, leaveChallenge } from '../features/challenges/challengeSlice';
 import ChallengeCard from '../components/ChallengeCard';
 import { toast } from 'react-toastify';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 function JoinedChallenge() {
     const navigate = useNavigate();
@@ -103,6 +104,7 @@ function JoinedChallenge() {
                                 onAction={handleLeaveChallenge}
                                 actionLabel="Leave Challenge"
                                 actionColor="error"
+                                icon={<ExitToAppIcon />}
                             />
                         </Grid>
                     ))}
