@@ -28,6 +28,7 @@ function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, action
         setEnrollOpen(true);
         dispatch(fetchNotEnrolledStudents(challenge._id));
     };
+    
     const handleEnroll = (studentIds) => {
         dispatch(enrollStudentsThunk({ challengeId: challenge._id, studentIds }))
             .unwrap()
@@ -38,13 +39,38 @@ function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, action
             });
     };
 
+    const handleCardClick = () => {
+        onViewDetails(challenge._id);
+    };
+
+    const handleButtonClick = (e, callback) => {
+        e.stopPropagation(); // Prevent card click when button is clicked
+        callback();
+    };
+
     return (
-        <Card sx={{ position: 'relative', width: 340, minHeight: 350, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <Card 
+            sx={{ 
+                position: 'relative', 
+                width: 340, 
+                minHeight: 350, 
+                display: 'flex', 
+                flexDirection: 'column', 
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease-in-out',
+                '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                }
+            }}
+            onClick={handleCardClick}
+        >
             {showEdit && (
                 <IconButton
                     size="small"
                     sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2, background: 'white', boxShadow: 1 }}
-                    onClick={() => navigate(`/edit-challenge/${challenge._id}`)}
+                    onClick={(e) => handleButtonClick(e, () => navigate(`/edit-challenge/${challenge._id}`))}
                 >
                     <EditIcon fontSize="small" color="primary" />
                 </IconButton>
@@ -101,7 +127,7 @@ function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, action
                 <Button 
                     variant='outlined' 
                     size="small" 
-                    onClick={() => onViewDetails(challenge._id)}
+                    onClick={(e) => handleButtonClick(e, () => onViewDetails(challenge._id))}
                 >
                     View Details
                 </Button>
@@ -110,7 +136,7 @@ function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, action
                         variant='outlined' 
                         color={actionColor}
                         size="small"
-                        onClick={() => onAction(challenge._id)}
+                        onClick={(e) => handleButtonClick(e, () => onAction(challenge._id))}
                     >
                         {actionLabel}
                     </Button>
@@ -121,7 +147,7 @@ function ChallengeCard({ challenge, onViewDetails, onAction, actionLabel, action
                         color="primary"
                         size="small"
                         startIcon={<GroupAddIcon />}
-                        onClick={handleOpenEnroll}
+                        onClick={(e) => handleButtonClick(e, handleOpenEnroll)}
                     >
                         Enroll
                     </Button>

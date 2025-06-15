@@ -153,6 +153,18 @@ const EditChallenge = () => {
             });
     };
 
+    // Helper function to check if URL is YouTube
+    const isYouTubeUrl = (url) => {
+        return url.includes('youtube.com/watch') || url.includes('youtu.be/');
+    };
+
+    // Helper function to extract YouTube video ID
+    const getYouTubeVideoId = (url) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
     if (isLoading && !challenge) {
         return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></Box>;
     }
@@ -357,23 +369,26 @@ const EditChallenge = () => {
                                                 }
                                             }}
                                         >
-                                            <ListItemText 
-                                                primary={
-                                                    <a 
-                                                        href={file.path ? `${API_URL}${file.path}` : URL.createObjectURL(file)} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        style={{ 
-                                                            color: 'inherit', 
-                                                            textDecoration: 'none',
-                                                            display: 'block',
-                                                            width: '100%'
-                                                        }}
-                                                    >
-                                                        {file.name || file.path.split('/').pop()}
-                                                    </a>
-                                                }
-                                            />
+                                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                                <PictureAsPdfIcon sx={{ mr: 2, color: 'error.main', fontSize: 40 }} />
+                                                <ListItemText 
+                                                    primary={
+                                                        <a 
+                                                            href={file.path ? `${API_URL}${file.path}` : URL.createObjectURL(file)} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            style={{ 
+                                                                color: 'inherit', 
+                                                                textDecoration: 'none',
+                                                                display: 'block',
+                                                                width: '100%'
+                                                            }}
+                                                        >
+                                                            {file.name || file.path.split('/').pop()}
+                                                        </a>
+                                                    }
+                                                />
+                                            </Box>
                                             <ListItemSecondaryAction>
                                                 <IconButton edge="end" onClick={() => removeResource('pdfs', index)}>
                                                     <DeleteIcon />
@@ -415,23 +430,36 @@ const EditChallenge = () => {
                                                 }
                                             }}
                                         >
-                                            <ListItemText 
-                                                primary={
-                                                    <a 
-                                                        href={file.path ? `${API_URL}${file.path}` : URL.createObjectURL(file)} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        style={{ 
-                                                            color: 'inherit', 
-                                                            textDecoration: 'none',
-                                                            display: 'block',
-                                                            width: '100%'
-                                                        }}
-                                                    >
-                                                        {file.name || file.path.split('/').pop()}
-                                                    </a>
-                                                }
-                                            />
+                                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                                <Box
+                                                    component="img"
+                                                    src={file.path ? `${API_URL}${file.path}` : URL.createObjectURL(file)}
+                                                    sx={{
+                                                        width: 60,
+                                                        height: 60,
+                                                        objectFit: 'cover',
+                                                        borderRadius: 1,
+                                                        mr: 2
+                                                    }}
+                                                />
+                                                <ListItemText 
+                                                    primary={
+                                                        <a 
+                                                            href={file.path ? `${API_URL}${file.path}` : URL.createObjectURL(file)} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            style={{ 
+                                                                color: 'inherit', 
+                                                                textDecoration: 'none',
+                                                                display: 'block',
+                                                                width: '100%'
+                                                            }}
+                                                        >
+                                                            {file.name || file.path.split('/').pop()}
+                                                        </a>
+                                                    }
+                                                />
+                                            </Box>
                                             <ListItemSecondaryAction>
                                                 <IconButton edge="end" onClick={() => removeResource('images', index)}>
                                                     <DeleteIcon />
@@ -484,32 +512,49 @@ const EditChallenge = () => {
                                                 '&:hover': { 
                                                     backgroundColor: 'rgba(0, 0, 0, 0.04)',
                                                     cursor: 'pointer'
-                                                }
+                                                },
+                                                flexDirection: 'column',
+                                                alignItems: 'flex-start'
                                             }}
                                         >
-                                            <ListItemText 
-                                                primary={
-                                                    <a 
-                                                        href={link.url} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        style={{ 
-                                                            color: 'inherit', 
-                                                            textDecoration: 'none',
-                                                            display: 'block',
-                                                            width: '100%'
-                                                        }}
-                                                    >
-                                                        {link.title}
-                                                    </a>
-                                                }
-                                                secondary={link.url}
-                                            />
-                                            <ListItemSecondaryAction>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                                <LinkIcon sx={{ mr: 2, color: 'info.main', fontSize: 40 }} />
+                                                <ListItemText 
+                                                    primary={
+                                                        <a 
+                                                            href={link.url} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            style={{ 
+                                                                color: 'inherit', 
+                                                                textDecoration: 'none',
+                                                                display: 'block',
+                                                                width: '100%'
+                                                            }}
+                                                        >
+                                                            {link.title}
+                                                        </a>
+                                                    }
+                                                    secondary={link.url}
+                                                />
                                                 <IconButton edge="end" onClick={() => removeResource('links', index)}>
                                                     <DeleteIcon />
                                                 </IconButton>
-                                            </ListItemSecondaryAction>
+                                            </Box>
+                                            {isYouTubeUrl(link.url) && (
+                                                <Box sx={{ width: '100%', mt: 2 }}>
+                                                    <iframe
+                                                        width="100%"
+                                                        height="200"
+                                                        src={`https://www.youtube.com/embed/${getYouTubeVideoId(link.url)}`}
+                                                        title={link.title}
+                                                        frameBorder="0"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                        style={{ borderRadius: '8px' }}
+                                                    />
+                                                </Box>
+                                            )}
                                         </ListItem>
                                     ))}
                                 </List>

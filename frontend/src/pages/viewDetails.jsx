@@ -77,6 +77,18 @@ function ViewDetails() {
         }
     };
 
+    // Helper function to check if URL is YouTube
+    const isYouTubeUrl = (url) => {
+        return url.includes('youtube.com/watch') || url.includes('youtu.be/');
+    };
+
+    // Helper function to extract YouTube video ID
+    const getYouTubeVideoId = (url) => {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
     if (isLoading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -98,25 +110,56 @@ function ViewDetails() {
 
     return (
         <>
-            {/* Go Back Button */}
-            <Button
-                variant="contained"
-                fullWidth
-                startIcon={<AssignmentReturnIcon />}
-                onClick={() => navigate('/dashboard')}
-                sx={{
-                    mx: 'auto',
-                    display: 'flex',
-                    color: 'black',
-                    alignItems: 'center',
-                    backgroundColor: "#EEEEEE",
-                    '&:hover': {
-                        backgroundColor: "#BDBDBD",
-                    },
-                }}
-            >
-                Go Back
-            </Button>
+            {/* Header with Go Back and Completion Buttons */}
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                mb: 2,
+                gap: 2
+            }}>
+                <Button
+                    variant="contained"
+                    startIcon={<AssignmentReturnIcon />}
+                    onClick={() => navigate('/dashboard')}
+                    sx={{
+                        color: 'black',
+                        backgroundColor: "#EEEEEE",
+                        '&:hover': {
+                            backgroundColor: "#BDBDBD",
+                        },
+                    }}
+                >
+                    Go Back
+                </Button>
+
+                {/* Completion Button for Students */}
+                {!isCoordinator && challenge?.joined && (
+                    <Box>
+                        {challenge.completed ? (
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                startIcon={<CancelIcon />}
+                                onClick={() => setConfirmDialog(true)}
+                                disabled={isLoading}
+                            >
+                                Mark as Not Completed
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                color="success"
+                                startIcon={<CheckCircleIcon />}
+                                onClick={() => setConfirmDialog(true)}
+                                disabled={isLoading}
+                            >
+                                Mark as Completed
+                            </Button>
+                        )}
+                    </Box>
+                )}
+            </Box>
 
             {/* Challenge Details */}
             <Box p={3}>
@@ -164,33 +207,6 @@ function ViewDetails() {
                                 {challenge.instructions}
                             </Typography>
 
-                            {/* Completion Status for Students */}
-                            {!isCoordinator && challenge.joined && (
-                                <Box sx={{ mt: 4, mb: 4, textAlign: 'center' }}>
-                                    {challenge.completed ? (
-                                        <Button
-                                            variant="outlined"
-                                            color="error"
-                                            startIcon={<CancelIcon />}
-                                            onClick={() => setConfirmDialog(true)}
-                                            disabled={isLoading}
-                                        >
-                                            Mark as Not Completed
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            variant="contained"
-                                            color="success"
-                                            startIcon={<CheckCircleIcon />}
-                                            onClick={() => setConfirmDialog(true)}
-                                            disabled={isLoading}
-                                        >
-                                            Mark as Completed
-                                        </Button>
-                                    )}
-                                </Box>
-                            )}
-
                             {/* Resources Section */}
                             {(challenge.resources?.pdfs?.length > 0 || 
                               challenge.resources?.images?.length > 0 || 
@@ -225,7 +241,7 @@ function ViewDetails() {
                                                                 }}
                                                             >
                                                                 <ListItemIcon>
-                                                                    <PictureAsPdfIcon color="error" />
+                                                                    <PictureAsPdfIcon color="error" sx={{ fontSize: 40 }} />
                                                                 </ListItemIcon>
                                                                 <ListItemText 
                                                                     primary={pdf.name}
@@ -265,9 +281,17 @@ function ViewDetails() {
                                                                     }
                                                                 }}
                                                             >
-                                                                <ListItemIcon>
-                                                                    <ImageIcon color="primary" />
-                                                                </ListItemIcon>
+                                                                <Box
+                                                                    component="img"
+                                                                    src={`${API_URL}${image.path}`}
+                                                                    sx={{
+                                                                        width: 60,
+                                                                        height: 60,
+                                                                        objectFit: 'cover',
+                                                                        borderRadius: 1,
+                                                                        mr: 2
+                                                                    }}
+                                                                />
                                                                 <ListItemText 
                                                                     primary={image.name}
                                                                     primaryTypographyProps={{
@@ -294,37 +318,63 @@ function ViewDetails() {
                                                         {challenge.resources.links.map((link, index) => (
                                                             <ListItem 
                                                                 key={index}
-                                                                component="a"
-                                                                href={link.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
                                                                 sx={{ 
                                                                     borderRadius: 1,
                                                                     '&:hover': { 
                                                                         backgroundColor: 'action.hover',
                                                                         cursor: 'pointer'
-                                                                    }
+                                                                    },
+                                                                    flexDirection: 'column',
+                                                                    alignItems: 'flex-start'
                                                                 }}
                                                             >
-                                                                <ListItemIcon>
-                                                                    <LinkIcon color="info" />
-                                                                </ListItemIcon>
-                                                                <ListItemText 
-                                                                    primary={link.title}
-                                                                    secondary={link.url}
-                                                                    primaryTypographyProps={{
-                                                                        sx: { 
-                                                                            color: 'text.primary',
-                                                                            textDecoration: 'none'
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                                                    <ListItemIcon>
+                                                                        <LinkIcon color="info" sx={{ fontSize: 40 }} />
+                                                                    </ListItemIcon>
+                                                                    <ListItemText 
+                                                                        primary={
+                                                                            <a 
+                                                                                href={link.url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                style={{ 
+                                                                                    color: 'inherit',
+                                                                                    textDecoration: 'none'
+                                                                                }}
+                                                                            >
+                                                                                {link.title}
+                                                                            </a>
                                                                         }
-                                                                    }}
-                                                                    secondaryTypographyProps={{
-                                                                        sx: { 
-                                                                            color: 'text.secondary',
-                                                                            textDecoration: 'none'
-                                                                        }
-                                                                    }}
-                                                                />
+                                                                        secondary={link.url}
+                                                                        primaryTypographyProps={{
+                                                                            sx: { 
+                                                                                color: 'text.primary',
+                                                                                textDecoration: 'none'
+                                                                            }
+                                                                        }}
+                                                                        secondaryTypographyProps={{
+                                                                            sx: { 
+                                                                                color: 'text.secondary',
+                                                                                textDecoration: 'none'
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </Box>
+                                                                {isYouTubeUrl(link.url) && (
+                                                                    <Box sx={{ width: '100%', mt: 2 }}>
+                                                                        <iframe
+                                                                            width="100%"
+                                                                            height="315"
+                                                                            src={`https://www.youtube.com/embed/${getYouTubeVideoId(link.url)}`}
+                                                                            title={link.title}
+                                                                            frameBorder="0"
+                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                            allowFullScreen
+                                                                            style={{ borderRadius: '8px' }}
+                                                                        />
+                                                                    </Box>
+                                                                )}
                                                             </ListItem>
                                                         ))}
                                                     </List>

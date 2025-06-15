@@ -6,13 +6,17 @@ import { Outlet } from 'react-router-dom';
 
 const DashboardLayout = () => {
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
             <Navbar />
-            <Box sx={{ display: 'flex', flex: 1 }}>
+            <Box sx={{ display: 'flex', flex: 1, height: 'calc(100vh - 64px)' }}>
                 {/* Sidebar */}
-                <Box sm={3} sx={{
+                <Box sx={{
                     display: { xs: 'none', sm: 'block' },
-                    flexShrink: 0
+                    flexShrink: 0,
+                    position: 'sticky',
+                    top: 0,
+                    height: '100%',
+                    overflow: 'hidden'
                 }}>
                     <Sidebar />
                 </Box>
@@ -21,7 +25,8 @@ const DashboardLayout = () => {
                 <Box sx={{ 
                     flex: 1,
                     backgroundColor: '#EEEEEE',
-                    minHeight: '100vh',
+                    height: '100%',
+                    overflow: 'auto',
                     p: 3,
                     width: '100%'
                 }}>
